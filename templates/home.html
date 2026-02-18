@@ -1,29 +1,246 @@
-<html>
-    <body>
-    <div class="login">
-        <h1>FWI Prediction</h1>
-    
-        <!-- Main Input For Receiving Query to our ML -->
-        <form action="{{ url_for('predict') }}" method="post">
-    
-        <input type="text" name="Temperature" placeholder="Temperature" required="required" /><br>
-        <input type="text" name="RH" placeholder="RH" required="required" /><br>
-        <input type="text" name="Ws" placeholder="Ws" required="required" /><br>
-        <input type="text" name="Rain" placeholder="Rain" required="required" /><br>
-        <input type="text" name="FFMC" placeholder="FFMC" required="required" /><br>
-        <input type="text" name="DMC" placeholder="DMC" required="required" /><br>
-        <input type="text" name="ISI" placeholder="ISI" required="required" /><br>
-        <!-- <input type="text" name="Classes" placeholder="Classes" required="required" /><br> -->
-        <input type="text" name="Region" placeholder="Region" required="required" /><br>
-    
-        <button type="submit" class="btn btn-primary btn-block btn-large">
-            Predict
-        </button>
-        </form>
-        <h2> 
-            the predicted value is {{results}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FWI Prediction</title>
 
-        </h2>
+  <style>
+    :root{
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+    }
+
+    *{
+      box-sizing: border-box;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue", sans-serif;
+    }
+
+    body{
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(1200px 600px at 20% 10%, #dbeafe 0%, transparent 60%),
+                  radial-gradient(1000px 500px at 80% 20%, #fce7f3 0%, transparent 55%),
+                  var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: var(--text);
+    }
+
+    .card{
+      width: 100%;
+      max-width: 900px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .header{
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+
+    .header h1{
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: -0.5px;
+    }
+
+    .header p{
+      margin: 6px 0 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .grid{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 650px){
+      .grid{
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .field label{
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .field input{
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      outline: none;
+      font-size: 14px;
+      background: #fff;
+      transition: 0.15s ease;
+    }
+
+    .field input:focus{
+      border-color: rgba(37, 99, 235, 0.55);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    }
+
+    .actions{
+      display: flex;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .btn{
+      border: none;
+      border-radius: 14px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      transition: 0.15s ease;
+    }
+
+    .btn-primary{
+      background: var(--primary);
+      color: #fff;
+      flex: 1;
+    }
+
+    .btn-primary:hover{
+      background: var(--primary-hover);
+    }
+
+    .btn-secondary{
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover{
+      background: #e2e8f0;
+    }
+
+    .result{
+      margin-top: 18px;
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      background: #fbfdff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .result h2{
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .result .value{
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -0.8px;
+    }
+
+    .footer{
+      margin-top: 14px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <div class="header">
+      <div>
+        <h1>FWI Prediction</h1>
+        <p>Enter the required values to predict the Fire Weather Index (FWI).</p>
+      </div>
     </div>
-    </body>
+
+    <form action="{{ url_for('predict') }}" method="post">
+      <div class="grid">
+
+        <div class="field">
+          <label for="Temperature">Temperature (°C)</label>
+          <input id="Temperature" type="number" step="0.1" name="Temperature" placeholder="e.g. 33" required />
+        </div>
+
+        <div class="field">
+          <label for="RH">Relative Humidity (%)</label>
+          <input id="RH" type="number" step="0.1" name="RH" placeholder="e.g. 45" required />
+        </div>
+
+        <div class="field">
+          <label for="Ws">Wind Speed (km/h)</label>
+          <input id="Ws" type="number" step="0.1" name="Ws" placeholder="e.g. 16" required />
+        </div>
+
+        <div class="field">
+          <label for="Rain">Rainfall (mm)</label>
+          <input id="Rain" type="number" step="0.1" name="Rain" placeholder="e.g. 0" required />
+        </div>
+
+        <div class="field">
+          <label for="FFMC">FFMC</label>
+          <input id="FFMC" type="number" step="0.1" name="FFMC" placeholder="e.g. 78" required />
+        </div>
+
+        <div class="field">
+          <label for="DMC">DMC</label>
+          <input id="DMC" type="number" step="0.1" name="DMC" placeholder="e.g. 25" required />
+        </div>
+
+        <div class="field">
+          <label for="ISI">ISI</label>
+          <input id="ISI" type="number" step="0.1" name="ISI" placeholder="e.g. 4.0" required />
+        </div>
+
+        <div class="field">
+          <label for="Region">Region (0 or 1)</label>
+          <input id="Region" type="number" step="1" name="Region" placeholder="0 or 1" required />
+        </div>
+
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary">Predict</button>
+        <button type="reset" class="btn btn-secondary">Reset</button>
+      </div>
+    </form>
+
+    <div class="result">
+        <h2>Predicted FWI</h2>
+        <div class="value">{{ results }}</div>
+    </div>
+
+
+    <div class="footer">
+      Uses Flask + RidgeCV • Deployed using Render
+    </div>
+  </div>
+</body>
 </html>
