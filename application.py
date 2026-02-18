@@ -8,8 +8,8 @@ import pickle
 application = Flask(__name__)
 app = application
 
-ridge_model = pickle.load(open('ridge.pkl', 'rb'))
-scaler = pickle.load(open('scaler.pkl', 'rb'))
+ridge_model = pickle.load(open('ridgecv.pkl', 'rb'))
+scaler = pickle.load(open('scaler2.pkl', 'rb'))
 
 
 @app.route("/")
@@ -27,10 +27,10 @@ def predict():
         FFMC = float(request.form.get('FFMC'))
         DMC = float(request.form.get('DMC'))
         ISI = float(request.form.get('ISI'))
-        Classes = float(request.form.get('Classes'))
+        # Classes = float(request.form.get('Classes'))
         Region = float(request.form.get('Region'))
 
-        new_data_scaled = scaler.transform([[Temperature, RH, Ws, Rain, FFMC, DMC, ISI, Classes, Region]])
+        new_data_scaled = scaler.transform([[Temperature, RH, Ws, Rain, FFMC, DMC, ISI, Region]])
         result = ridge_model.predict(new_data_scaled)
         return render_template("home.html", results = result[0])
     
